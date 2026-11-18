@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fredoka } from "next/font/google";
+import { Logo } from "@/components/Logo";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -33,7 +34,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fredoka.variable} h-full`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Splash: CSS-only, plays on every full page load, then fades out and gets out of the way. */}
+        <div className="splash" aria-hidden="true">
+          <Logo className="splash-logo h-12 sm:h-16" />
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

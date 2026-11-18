@@ -135,6 +135,37 @@ h3 {
   outline-offset: 2px;
 }
 
+/* Splash screen: sunshine overlay with the logo popping in, gone after ~1.6s. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--sns-sunshine);
+  pointer-events: none;
+  animation: splash-out 400ms ease-in 1.2s forwards;
+}
+.splash-logo {
+  animation: splash-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes splash-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 @media (prefers-reduced-transparency: reduce) {
   .glass {
     background: var(--sns-cream);
@@ -146,6 +177,9 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  .splash {
+    display: none;
   }
   *,
   *::before,

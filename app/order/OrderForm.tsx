@@ -2,9 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { OrderPlaced } from "@/components/OrderPlaced";
 import { DAILY_LIMIT, MAX_IMAGE_BYTES, PRICES, type Variant } from "@/lib/rules";
+import { DEMO_ORDERS } from "@/lib/site";
 
 type FieldError = { message: string; field?: string };
+
+/** Looks like a real code (SNS-XXXXXXXX). Demo only: it is not saved anywhere. */
+function makeDemoCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  return `SNS-${Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+}
 
 const input =
   "w-full rounded-2xl border border-line bg-surface px-4 py-3.5 text-base placeholder:text-muted transition focus:border-fg";
@@ -16,9 +24,15 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<FieldError | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [demoCode, setDemoCode] = useState<string | null>(null);
 
   const total = PRICES[variant] * qty;
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
+
+  function showDemoSuccess() {
+    setDemoCode(makeDemoCode());
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +49,10 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/orders", { method: "POST", body: form });
+      if (DEMO_ORDERS && res.status >= 500) {
+        showDemoSuccess();
+        return;
+      }
       const body = await res.json();
       if (!res.ok) {
         setError({ message: body.error ?? "Something went wrong.", field: body.field });
@@ -42,11 +60,17 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
       }
       router.push(`/thank-you/${body.code}`);
     } catch {
+      if (DEMO_ORDERS) {
+        showDemoSuccess();
+        return;
+      }
       setError({ message: "Network problem. Check your connection and try again." });
     } finally {
       setIsSubmitting(false);
     }
   }
+
+  if (demoCode) return <OrderPlaced code={demoCode} variant={variant} qty={qty} total={total} />;
 
   return (
     <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate>

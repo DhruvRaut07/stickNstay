@@ -34,7 +34,7 @@ export default function Home() {
           <div className="mx-auto max-w-5xl px-5 pb-20 pt-16 text-center sm:pt-24">
             <Reveal>
               <p className="tilt mb-4 rounded-full bg-bg px-4 py-1.5 text-sm font-semibold">
-                For IBS Mumbai batchmates
+                For IBS Mumbai
               </p>
               <h1 className="display mx-auto max-w-3xl">Make your space look like you.</h1>
               <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed sm:text-xl">
