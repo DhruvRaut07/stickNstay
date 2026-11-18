@@ -1,26 +1,156 @@
 @import "tailwindcss";
 
+/* stickNstay brand tokens (from the logo kit). The only place colours are defined. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --sns-sunshine: #ffd45c; /* hero bands, primary buttons, highlights */
+  --sns-sunshine-deep: #f5be2b; /* hover / pressed for sunshine */
+  --sns-ink: #1b1b2f; /* text, headings, dark sections, footer */
+  --sns-magnet-red: #e63946; /* accents, badges, icons, large type only */
+  --sns-red-deep: #c9283a; /* red buttons, links, small red text */
+  --sns-cream: #fff6e9; /* page background */
+  --sns-paper: #f4efe6; /* alternate section background */
+  --sns-white: #ffffff;
+  --sns-ink-soft: #5a6275; /* secondary text */
+  --sns-line: #d9d2c3; /* borders, dividers */
+
+  --radius: 16px; /* inputs, small elements */
+  --radius-lg: 28px; /* cards, sections */
+  --shadow-card: 0 6px 20px rgba(27, 27, 47, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--sns-cream);
+  --color-paper: var(--sns-paper);
+  --color-surface: var(--sns-white);
+  --color-fg: var(--sns-ink);
+  --color-muted: var(--sns-ink-soft);
+  --color-line: var(--sns-line);
+  --color-accent: var(--sns-sunshine);
+  --color-accent-deep: var(--sns-sunshine-deep);
+  --color-accent-fg: var(--sns-ink);
+  --color-magnet: var(--sns-magnet-red);
+  --color-link: var(--sns-red-deep);
+  --font-sans: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--sns-cream);
+  color: var(--sns-ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.display {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.15;
+  font-weight: 700;
+  text-wrap: balance;
+}
+.headline {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.15;
+  font-weight: 700;
+  text-wrap: balance;
+}
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+/* Cream chrome: content scrolls underneath. */
+.glass {
+  background: color-mix(in srgb, var(--sns-cream) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sns-line);
+}
+
+/* Buttons: pill, bold, 44px touch target. */
+.btn,
+.btn-ink,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 120ms ease-out, background-color 150ms ease, color 150ms ease;
+}
+.btn {
+  background: var(--sns-sunshine);
+  color: var(--sns-ink);
+}
+.btn:hover,
+.btn:active {
+  background: var(--sns-sunshine-deep);
+}
+.btn-ink {
+  background: var(--sns-ink);
+  color: var(--sns-sunshine);
+  border: 2px solid var(--sns-ink);
+}
+.btn-ink:hover {
+  background: var(--sns-cream);
+  color: var(--sns-ink);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--sns-ink);
+  border: 2px solid var(--sns-ink);
+}
+.btn-ghost:hover {
+  background: var(--sns-ink);
+  color: var(--sns-sunshine);
+}
+.btn:active,
+.btn-ink:active,
+.btn-ghost:active,
+.press:active {
+  transform: scale(0.97);
+}
+.press {
+  transition: transform 120ms ease-out, background-color 150ms ease;
+}
+
+/* Playful tilt for badges/tags, kept small. */
+.tilt {
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+:focus-visible {
+  outline: 3px solid var(--sns-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--sns-cream);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
