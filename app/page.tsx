@@ -61,7 +61,24 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-5 py-20">
+        <section className="mx-auto max-w-3xl px-5 py-20">
+          <Reveal>
+            <h2 className="headline text-center">See it in action.</h2>
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              aria-label="stickNstay sticker drop video with voiceover"
+              className="mt-10 w-full rounded-[28px] border border-line bg-fg shadow-[var(--shadow-card)]"
+              src="/sticknstay-sticker-drop-voiceover.mp4#t=0.1"
+            >
+              Your browser does not support video playback.
+            </video>
+          </Reveal>
+        </section>
+
+        <section className="bg-paper">
+          <div className="mx-auto max-w-5xl px-5 py-20">
           <Reveal>
             <h2 className="headline text-center">Stick it anywhere magnetic.</h2>
             <p className="mx-auto mt-4 max-w-xl text-center text-lg text-muted">
@@ -78,9 +95,10 @@ export default function Home() {
               </Reveal>
             ))}
           </ul>
+          </div>
         </section>
 
-        <section className="bg-paper">
+        <section>
           <div className="mx-auto max-w-5xl px-5 py-20">
             <Reveal>
               <h2 className="headline text-center">Why you&apos;ll love it.</h2>
@@ -98,7 +116,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="prices" className="mx-auto max-w-5xl scroll-mt-20 px-5 py-20">
+        <section id="prices" className="scroll-mt-16 bg-paper">
+          <div className="mx-auto max-w-5xl px-5 py-20">
           <Reveal>
             <h2 className="headline text-center">Two ways to stick.</h2>
           </Reveal>
@@ -134,9 +153,10 @@ export default function Home() {
           <p className="mt-6 text-center text-sm text-muted">
             Up to {DAILY_LIMIT} magnets per student per day · Cash on delivery only
           </p>
+          </div>
         </section>
 
-        <section className="bg-paper">
+        <section>
           <div className="mx-auto max-w-5xl px-5 py-20">
             <Reveal>
               <h2 className="headline text-center">How it works.</h2>
