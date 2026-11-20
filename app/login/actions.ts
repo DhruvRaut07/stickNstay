@@ -2,9 +2,10 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { CODE_TTL_MS, codeMatches, emailMatchesStudent, generateCode, hashCode, safeNext } from "@/lib/auth";
-import { sendLoginCode } from "@/lib/mail";
+import { sendLoginCode, sendWelcomeMail } from "@/lib/mail";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizeBsp } from "@/lib/rules";
 import { authConfigured, endSession, startSession } from "@/lib/session";
@@ -135,15 +136,18 @@ async function verifyCode(formData: FormData, next: string): Promise<LoginState>
     return again("Something went wrong. Please try again.");
   }
   // Bind this mailbox to the BSP on first login (the unique index blocks one mailbox owning two BSPs).
-  const { error: bindError } = await db
+  const { data: bound, error: bindError } = await db
     .from("bsp_allowlist")
     .update({ email: row.email })
     .eq("bsp", bsp)
-    .is("email", null);
+    .is("email", null)
+    .select("name");
   if (bindError) {
     console.error("Binding email failed", bindError);
     return { step: "request", next, error: NO_MATCH };
   }
+  // A row came back only on the very first login: welcome every verified student, ordering or not.
+  if (bound?.length) after(() => sendWelcomeMail(row.email, bound[0].name ?? ""));
   await startSession(bsp);
   redirect(safeNext(next));
 }

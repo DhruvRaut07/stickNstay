@@ -2,6 +2,7 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { checkoutSchema } from "@/lib/cart";
 import { getProductsBySlugs } from "@/lib/catalog";
 import { sendOrderMails } from "@/lib/mail";
+import { getCollegeEmail } from "@/lib/students";
 import { rateLimit } from "@/lib/rate-limit";
 import { DAILY_LIMIT } from "@/lib/rules";
 import { getStudent } from "@/lib/session";
@@ -94,7 +95,8 @@ export async function POST(req: NextRequest) {
       name: order.name,
       bsp: order.bsp,
       mobile: order.mobile,
-      email: order.email,
+      // Every buyer gets the confirmation: the form email if they gave one, else their college email.
+      email: order.email ?? (await getCollegeEmail(order.bsp)),
       variant: "basic",
       qty,
       total: result.o_total,
