@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { adminRedirect, firstIssue, orIlike, productSchema, searchTerm } from "./admin-schemas";
+import { adminRedirect, firstIssue, orIlike, productSchema, safeAdminPath, searchTerm } from "./admin-schemas";
+
+describe("safeAdminPath", () => {
+  it("keeps admin pages and filters", () => {
+    expect(safeAdminPath("/admin/orders?status=new")).toBe("/admin/orders?status=new");
+  });
+
+  it.each(["https://evil.example", "//evil.example", "/shop", "/admin/../x", "javascript:alert(1)", undefined])(
+    "rejects %s",
+    (target) => {
+      expect(safeAdminPath(target)).toBe("/admin");
+    },
+  );
+
+  it("uses the supplied fallback", () => {
+    expect(safeAdminPath("/nope", "/admin/orders")).toBe("/admin/orders");
+  });
+});
 
 describe("search helpers", () => {
   it("keeps dots and @ so emails and order codes match", () => {

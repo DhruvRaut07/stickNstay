@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { AdminNav } from "@/components/AdminNav";
+import { card, ErrorNote, FlashMessage, PageHeader, Pill } from "@/components/admin/ui";
+import { Pagination } from "@/components/Pagination";
+import { paginate, parsePage } from "@/lib/pagination";
 import { requireAdmin, supabaseAdmin } from "@/lib/supabase";
 import { createProduct, updateProduct } from "./actions";
 
@@ -16,7 +18,9 @@ type Product = {
   active: boolean;
 };
 type Category = { slug: string; name: string };
-type Props = { searchParams: Promise<{ q?: string; category?: string; msg?: string }> };
+type Props = { searchParams: Promise<{ q?: string; category?: string; msg?: string; page?: string }> };
+
+const PAGE_SIZE = 20;
 
 const field =
   "min-h-11 rounded-2xl border border-line bg-surface px-3 py-2 text-sm placeholder:text-muted focus:border-fg";
@@ -91,7 +95,7 @@ function ProductFields({ product, categories }: { product?: Product; categories:
 
 export default async function AdminProductsPage({ searchParams }: Props) {
   await requireAdmin();
-  const { q, category, msg } = await searchParams;
+  const { q, category, msg, page: rawPage } = await searchParams;
   const db = supabaseAdmin();
 
   const [productsRes, categoriesRes] = await Promise.all([
@@ -104,31 +108,27 @@ export default async function AdminProductsPage({ searchParams }: Props) {
   const categories = categoriesRes.data ?? [];
   const term = (q ?? "").trim().toLowerCase().slice(0, 40);
   const activeCategory = SLUG.test(category ?? "") ? category : undefined;
-  const products = (productsRes.data ?? []).filter(
+  const matches = (productsRes.data ?? []).filter(
     (p) =>
       (!activeCategory || p.category_slug === activeCategory) &&
       (!term || p.name.toLowerCase().includes(term) || p.slug.includes(term)),
   );
-  const back = `/admin/products?${new URLSearchParams({ ...(term && { q: term }), ...(activeCategory && { category: activeCategory }) })}`;
+  const paged = paginate(matches, parsePage(rawPage), PAGE_SIZE);
+  const products = paged.items;
+  const filters = { ...(term && { q: term }), ...(activeCategory && { category: activeCategory }) };
+  const back = `/admin/products?${new URLSearchParams({ ...filters, ...(paged.page > 1 && { page: String(paged.page) }) })}`;
   const categoryName = new Map(categories.map((c) => [c.slug, c.name]));
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-10">
-      <AdminNav />
-      <h1 className="headline mt-8">Products</h1>
+    <>
+      <PageHeader title="Products" description="Add designs, edit copy, or hide them from the shop." />
 
-      {msg && (
-        <p role="status" className="mt-4 rounded-2xl bg-accent p-4 text-sm font-medium">
-          {msg}
-        </p>
-      )}
+      <FlashMessage message={msg} />
       {(productsRes.error || categoriesRes.error) && (
-        <p role="alert" className="mt-4 font-medium text-link">
-          Couldn&apos;t load {productsRes.error ? "products" : "categories"}. Check the Vercel logs.
-        </p>
+        <ErrorNote>Couldn&apos;t load {productsRes.error ? "products" : "categories"}. Check the Vercel logs.</ErrorNote>
       )}
 
-      <form className="mt-6 flex flex-wrap gap-3" role="search">
+      <form className={`${card} flex flex-wrap gap-3 p-4`} role="search">
         <input name="q" defaultValue={term} placeholder="Search name or slug" className={`${field} min-w-56 flex-1`} />
         <select name="category" defaultValue={activeCategory ?? ""} className={field} aria-label="Filter by category">
           <option value="">All categories</option>
@@ -141,7 +141,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
         <button className="btn press text-sm">Filter</button>
       </form>
 
-      <details className="mt-6 rounded-[28px] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
+      <details className={`${card} p-5`}>
         <summary className="cursor-pointer text-lg font-bold">Add a product</summary>
         <form action={createProduct} className="mt-4 space-y-4">
           <input type="hidden" name="back" value={back} />
@@ -150,15 +150,15 @@ export default async function AdminProductsPage({ searchParams }: Props) {
         </form>
       </details>
 
-      <p className="mt-6 text-sm text-muted">
-        {products.length} product{products.length === 1 ? "" : "s"}
+      <p className="text-sm text-muted">
+        {paged.total} product{paged.total === 1 ? "" : "s"}
       </p>
-      <ul className="mt-3 space-y-3">
+      <ul className="space-y-3">
         {products.length === 0 && !productsRes.error && (
-          <li className="py-10 text-center text-muted">No products match.</li>
+          <li className={`${card} py-12 text-center text-muted`}>No products match.</li>
         )}
         {products.map((p) => (
-          <li key={p.slug} className="rounded-[28px] border border-line bg-surface shadow-[var(--shadow-card)]">
+          <li key={p.slug} className={card}>
             <details>
               <summary className="flex cursor-pointer list-none items-center gap-4 p-4 [&::-webkit-details-marker]:hidden">
                 {p.image_url ? (
@@ -172,11 +172,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                     {categoryName.get(p.category_slug) ?? p.category_slug} · sort {p.sort}
                   </span>
                 </span>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${p.active ? "bg-accent" : "bg-paper text-muted"}`}
-                >
-                  {p.active ? "Visible" : "Hidden"}
-                </span>
+                <Pill tone={p.active ? "new" : "neutral"}>{p.active ? "Visible" : "Hidden"}</Pill>
               </summary>
               <form action={updateProduct} className="space-y-4 border-t border-line p-5">
                 <input type="hidden" name="back" value={back} />
@@ -187,6 +183,8 @@ export default async function AdminProductsPage({ searchParams }: Props) {
           </li>
         ))}
       </ul>
-    </main>
+
+      <Pagination page={paged.page} pages={paged.pages} total={paged.total} size={PAGE_SIZE} basePath="/admin/products" params={filters} />
+    </>
   );
 }

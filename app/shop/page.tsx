@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomMagnetCard } from "@/components/CustomMagnetCard";
 import { PageHero } from "@/components/PageHero";
+import { Pagination } from "@/components/Pagination";
 import { ProductCard } from "@/components/ProductCard";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getCategories, getProducts } from "@/lib/catalog";
+import { getCategories, getProducts, type Product } from "@/lib/catalog";
+import { paginate, parsePage } from "@/lib/pagination";
 import { DAILY_LIMIT, PRICES } from "@/lib/rules";
 
 export const metadata: Metadata = {
@@ -13,7 +15,11 @@ export const metadata: Metadata = {
   description: "Browse ready-made 5×7 inch magnet designs by category, or make your own custom magnet.",
 };
 
-type Props = { searchParams: Promise<{ category?: string }> };
+type Props = { searchParams: Promise<{ category?: string; page?: string }> };
+
+// 12 cells = 3 rows of 4. The "make your own" card takes the first cell of "All", so it counts too.
+const PAGE_SIZE = 12;
+type Cell = Product | "custom";
 
 // Cover sticker per category slug. Categories without an entry get no tile.
 const COVERS: Record<string, string> = {
@@ -26,11 +32,13 @@ const COVERS: Record<string, string> = {
 const chip ="inline-flex min-h-11 items-center rounded-full border-2 px-5 font-semibold transition";
 
 export default async function ShopPage({ searchParams }: Props) {
-  const { category } = await searchParams;
+  const { category, page: rawPage } = await searchParams;
   // One round trip: the catalog is small (56 rows), so filter by category in memory.
   const [categories, all] = await Promise.all([getCategories(), getProducts()]);
   const active = categories.find((c) => c.slug === category);
   const products = active ? all.filter((p) => p.categorySlug === active.slug) : all;
+  const cells: Cell[] = active ? products : ["custom", ...products];
+  const paged = paginate(cells, parsePage(rawPage), PAGE_SIZE);
 
   return (
     <>
@@ -65,7 +73,7 @@ export default async function ShopPage({ searchParams }: Props) {
             ))}
           </nav>
 
-          {!active && (
+          {!active && paged.page === 1 && (
             <ul className="mt-10 grid grid-cols-2 gap-5 md:grid-cols-4">
               {categories
                 .filter((c) => COVERS[c.slug])
@@ -95,12 +103,24 @@ export default async function ShopPage({ searchParams }: Props) {
           {products.length === 0 && active ? (
             <p className="py-20 text-center text-muted">No designs here yet. Check back soon.</p>
           ) : (
-            <ul className="mt-12 grid grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-4">
-              {!active && <CustomMagnetCard />}
-              {products.map((product) => (
-                <ProductCard key={product.slug} product={product} />
-              ))}
-            </ul>
+            <>
+              <ul id="designs" className="mt-12 grid scroll-mt-24 grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-4">
+                {paged.items.map((cell) =>
+                  cell === "custom" ? <CustomMagnetCard key="custom" /> : <ProductCard key={cell.slug} product={cell} />,
+                )}
+              </ul>
+              <div className="mt-14">
+                <Pagination
+                  page={paged.page}
+                  pages={paged.pages}
+                  total={paged.total}
+                  size={PAGE_SIZE}
+                  basePath="/shop"
+                  params={{ category: active?.slug }}
+                  anchor="designs"
+                />
+              </div>
+            </>
           )}
         </section>
       </main>

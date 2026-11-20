@@ -35,9 +35,13 @@ export const searchTerm = (raw: unknown): string =>
 export const orIlike = (columns: readonly string[], term: string): string =>
   columns.map((c) => `${c}.ilike."%${term}%"`).join(",");
 
+/** `path` when it is a safe /admin path, else `fallback`. Use for any redirect target that came from the client. */
+export const safeAdminPath = (path: unknown, fallback = "/admin"): string =>
+  typeof path === "string" && ADMIN_PATH.test(path) ? path : fallback;
+
 /** Returns `path` with `msg` appended, or falls back to `fallback` when `path` is not an admin path. */
 export function adminRedirect(path: unknown, message: string, fallback = "/admin"): string {
-  const base = typeof path === "string" && ADMIN_PATH.test(path) ? path : fallback;
+  const base = safeAdminPath(path, fallback);
   const params = base.includes("?") ? "&" : "?";
   return `${base}${params}msg=${encodeURIComponent(message)}`;
 }

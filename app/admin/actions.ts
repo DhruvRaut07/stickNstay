@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { adminRedirect } from "@/lib/admin-schemas";
+import { adminRedirect, safeAdminPath } from "@/lib/admin-schemas";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizeBsp } from "@/lib/rules";
 import { getAdmin, requireAdmin, supabaseAdmin, supabaseAuth } from "@/lib/supabase";
@@ -13,30 +13,34 @@ const CHUNK = 500;
 const BSP_PATTERN = /^[A-Z0-9/_-]{3,24}$/;
 const STATUSES = ["new", "confirmed", "delivered", "cancelled"] as const;
 
-const back = (message: string) => redirect(`/admin?msg=${encodeURIComponent(message)}`);
-
 export async function login(formData: FormData) {
+  // Return to the page the admin was trying to open (only ever a safe /admin path).
+  const next = safeAdminPath(formData.get("next"));
+  const fail = (error: string) =>
+    redirect(`/admin/login?error=${error}${next === "/admin" ? "" : `&next=${encodeURIComponent(next)}`}`);
+
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!rateLimit(`login:${ip}`, 8, 10 * 60_000)) redirect("/admin/login?error=rate");
+  if (!rateLimit(`login:${ip}`, 8, 10 * 60_000)) return fail("rate");
 
   const parsed = z
     .object({ email: z.email(), password: z.string().min(1).max(200) })
     .safeParse({ email: formData.get("email"), password: formData.get("password") });
-  if (!parsed.success) redirect("/admin/login?error=1");
+  if (!parsed.success) return fail("1");
 
   const supabase = await supabaseAuth();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   // A valid Supabase user who is not in `admins` must not get in.
   if (error || !(await getAdmin())) {
     await supabase.auth.signOut();
-    redirect("/admin/login?error=1");
+    return fail("1");
   }
-  redirect("/admin");
+  redirect(next);
 }
 
 export async function logout() {
-  await (await supabaseAuth()).auth.signOut();
-  redirect("/admin/login");
+  const { error } = await (await supabaseAuth()).auth.signOut();
+  if (error) console.error("Admin sign out failed", error);
+  redirect("/admin/login?signedout=1");
 }
 
 export async function setStatus(formData: FormData) {
@@ -44,7 +48,7 @@ export async function setStatus(formData: FormData) {
   const parsed = z
     .object({ id: z.uuid(), status: z.enum(STATUSES) })
     .safeParse({ id: formData.get("id"), status: formData.get("status") });
-  const to = (message: string) => redirect(adminRedirect(formData.get("back"), message));
+  const to = (message: string) => redirect(adminRedirect(formData.get("back"), message, "/admin/orders"));
   if (!parsed.success) return to("Invalid status update.");
 
   const { data, error } = await supabaseAdmin()
@@ -63,6 +67,7 @@ export async function setStatus(formData: FormData) {
 
 export async function importBsps(formData: FormData) {
   await requireAdmin();
+  const back = (message: string) => redirect(adminRedirect(formData.get("back"), message, "/admin/students"));
   const text = String(formData.get("bsps") ?? "");
   const unique = new Set(
     text
@@ -88,6 +93,7 @@ export async function importBsps(formData: FormData) {
 
 export async function removeBsp(formData: FormData) {
   await requireAdmin();
+  const back = (message: string) => redirect(adminRedirect(formData.get("back"), message, "/admin/students"));
   const bsp = normalizeBsp(String(formData.get("bsp") ?? ""));
   if (!BSP_PATTERN.test(bsp)) return back("Enter a valid BSP number to remove.");
 

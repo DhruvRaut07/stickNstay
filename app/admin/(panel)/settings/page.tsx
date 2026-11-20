@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AdminNav } from "@/components/AdminNav";
+import { card, ErrorNote, PageHeader } from "@/components/admin/ui";
 import { DAILY_LIMIT, PRICES } from "@/lib/rules";
 import { requireAdmin, supabaseAdmin } from "@/lib/supabase";
 
@@ -21,37 +21,32 @@ export default async function AdminSettingsPage() {
   const mismatches = EXPECTED.filter(([key, , shown]) => live.has(key) && live.get(key) !== shown);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 py-10">
-      <AdminNav />
-      <h1 className="headline mt-8">Settings</h1>
+    <>
+      <PageHeader title="Settings" description="Prices and the daily limit, as the database charges them." />
 
-      {error && (
-        <p role="alert" className="mt-4 font-medium text-link">
-          Couldn&apos;t load settings. Check the Vercel logs.
-        </p>
-      )}
+      {error && <ErrorNote>Couldn&apos;t load settings. Check the Vercel logs.</ErrorNote>}
       {mismatches.length > 0 && (
-        <p role="alert" className="mt-4 rounded-2xl bg-accent p-4 text-sm font-medium">
+        <ErrorNote>
           Mismatch: the database charges a different value than the site shows for{" "}
           {mismatches.map(([, label]) => label).join(", ")}. Update <code>lib/rules.ts</code> or the database so they
           agree.
-        </p>
+        </ErrorNote>
       )}
 
-      <dl className="mt-8 grid gap-4 sm:grid-cols-3">
+      <dl className="grid gap-4 sm:grid-cols-3">
         {EXPECTED.map(([key, label, shown]) => (
-          <div key={key} className="rounded-[28px] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
-            <dt className="text-sm text-muted">{label}</dt>
-            <dd className="mt-1 text-3xl font-bold">{live.get(key) ?? "?"}</dd>
+          <div key={key} className={`${card} p-5`}>
+            <dt className="text-sm font-medium text-muted">{label}</dt>
+            <dd className="mt-2 text-3xl font-bold">{live.get(key) ?? "?"}</dd>
             <dd className="mt-1 text-xs text-muted">Site shows {shown}</dd>
           </div>
         ))}
       </dl>
 
-      <p className="mt-8 max-w-xl text-muted">
+      <p className="max-w-xl text-muted">
         These are read-only here. To change a price or the limit, update the <code>settings</code> table and{" "}
         <code>lib/rules.ts</code> together, then redeploy.
       </p>
-    </main>
+    </>
   );
 }

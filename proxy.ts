@@ -28,7 +28,12 @@ export async function proxy(request: NextRequest) {
   const isLogin = request.nextUrl.pathname === "/admin/login";
 
   if (!data.user && !isLogin) {
-    return NextResponse.redirect(new URL("/admin/login", request.url));
+    // Leftover Supabase cookies mean the visitor had a session that has now expired.
+    const expired = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+    const target = new URL("/admin/login", request.url);
+    if (expired) target.searchParams.set("error", "session");
+    target.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+    return NextResponse.redirect(target);
   }
   response.headers.set("Cache-Control", "no-store");
   return response;
