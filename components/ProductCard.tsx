@@ -14,7 +14,13 @@ export function ProductCard({ product }: { product: Product }) {
         tabIndex={-1}
         className="press block"
       >
-        <Magnet tilt="0deg" bg={product.artBg} text={product.artText} label={`${product.name} magnet design`} />
+        <Magnet
+          tilt="0deg"
+          bg={product.artBg}
+          text={product.artText}
+          imageUrl={product.imageUrl}
+          label={`${product.name} magnet design`}
+        />
       </Link>
       <div className="mt-4 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted">{product.categoryName}</p>

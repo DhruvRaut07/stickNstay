@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckBadge } from "./CheckBadge";
+import { Sticker } from "./Sticker";
 import { Toast } from "./Toast";
 
 type OrderPlacedProps = { code: string; variant: string; qty: number; total: number };
@@ -52,6 +53,8 @@ export function OrderPlaced({ code, variant, qty, total }: OrderPlacedProps) {
           Browse the shop
         </Link>
       </div>
+      <Sticker name="07-desi-hinglish/sab-badhiya" tilt={4} className="mt-10 w-44" />
+
     </div>
   );
 }

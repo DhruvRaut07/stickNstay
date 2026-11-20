@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AccountNav } from "@/components/AccountNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Sticker } from "@/components/Sticker";
 import { requireStudent } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -59,7 +60,8 @@ export default async function OrdersPage() {
         )}
 
         {!error && orders.length === 0 && (
-          <div className="py-20 text-center">
+          <div className="flex flex-col items-center py-16 text-center">
+            <Sticker name="07-desi-hinglish/kal-se-pakka" tilt={3} className="mb-6 w-48" />
             <p className="text-xl font-semibold">No orders yet.</p>
             <p className="mt-2 text-muted">Your orders will show up here once you place one.</p>
             <Link href="/shop" className="btn press mt-8">

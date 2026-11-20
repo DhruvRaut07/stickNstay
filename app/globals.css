@@ -351,7 +351,20 @@ html[data-sns-seen] #sns-splash {
   }
 }
 
+/* Home marquee: two identical halves, so moving -50% loops seamlessly. */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: sns-marquee 40s linear infinite;
+}
+@keyframes sns-marquee {
+  to { transform: translateX(-50%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none !important;
+  }
   html {
     scroll-behavior: auto;
   }

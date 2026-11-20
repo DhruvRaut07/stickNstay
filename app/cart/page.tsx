@@ -10,12 +10,13 @@ export const metadata: Metadata = { title: "Cart: StickNstay", robots: { index: 
 export default async function CartPage() {
   await connection(); // always read the live catalog, never a build-time copy
   const products = await getProducts();
-  const catalog = products.map(({ slug, name, artBg, artText, artTilt }) => ({
+  const catalog = products.map(({ slug, name, artBg, artText, artTilt, imageUrl }) => ({
     slug,
     name,
     artBg,
     artText,
     artTilt,
+    imageUrl,
   }));
 
   return (

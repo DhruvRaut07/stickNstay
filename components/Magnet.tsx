@@ -1,7 +1,21 @@
-type MagnetProps = { tilt: string; bg: string; text: string; label: string; title?: string };
+type MagnetProps = { tilt: string; bg: string; text: string; label: string; title?: string; imageUrl?: string | null };
 
-/** Placeholder magnet art until real designs exist. */
-export function Magnet({ tilt, bg, text, label, title }: MagnetProps) {
+/** Product art: the sticker image when there is one, else coloured placeholder art. */
+export function Magnet({ tilt, bg, text, label, title, imageUrl }: MagnetProps) {
+  if (imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageUrl}
+        alt={label}
+        width={800}
+        height={800}
+        loading="lazy"
+        className="aspect-square h-auto w-full select-none object-contain"
+        style={{ transform: `rotate(${tilt})` }}
+      />
+    );
+  }
   return (
     <div
       className="relative aspect-[5/7] w-full rounded-[28px] border border-line shadow-[var(--shadow-card)]"

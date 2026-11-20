@@ -21,7 +21,11 @@ export default function ContactPage() {
     <>
       <SiteHeader />
       <main>
-        <PageHero eyebrow="We reply fast" title="Say hi.">
+        <PageHero
+          eyebrow="We reply fast"
+          title="Say hi."
+          stickers={["07-desi-hinglish/chai-over-everything", "05-self-love-and-good-vibes/choose-joy"]}
+        >
           Questions, ideas or a design you want to see? We would love to hear it.
         </PageHero>
 

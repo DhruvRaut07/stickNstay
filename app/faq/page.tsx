@@ -28,7 +28,11 @@ export default function FaqPage() {
     <>
       <SiteHeader />
       <main>
-        <PageHero eyebrow="Good to know" title="Questions? Answered.">
+        <PageHero
+          eyebrow="Good to know"
+          title="Questions? Answered."
+          stickers={["04-study-mode/focus-mode-on", "07-desi-hinglish/sab-badhiya"]}
+        >
           Everything about surfaces, sizes, custom images and ordering.
         </PageHero>
 

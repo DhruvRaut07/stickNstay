@@ -50,7 +50,13 @@ export default async function ProductPage({ params }: Props) {
 
         <div className="mt-8 grid gap-12 md:grid-cols-2">
           <div className="mx-auto w-full max-w-sm">
-            <Magnet tilt="0deg" bg={product.artBg} text={product.artText} label={`${product.name} magnet design`} />
+            <Magnet
+              tilt="0deg"
+              bg={product.artBg}
+              text={product.artText}
+              imageUrl={product.imageUrl}
+              label={`${product.name} magnet design`}
+            />
           </div>
 
           <div>

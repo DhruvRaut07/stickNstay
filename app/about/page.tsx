@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AboutHeroArt } from "@/components/AboutHeroArt";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Sticker } from "@/components/Sticker";
 import { TEAM } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -221,7 +222,9 @@ export default function AboutPage() {
         )}
 
         {/* Call to action */}
-        <section className="bg-accent px-5 py-20 text-center sm:px-16 sm:py-24">
+        <section className="relative overflow-hidden bg-accent px-5 py-20 text-center sm:px-16 sm:py-24">
+          <Sticker name="08-doodle-icons/heart" tilt={-12} className="absolute left-4 top-6 w-16 sm:left-16 sm:top-10 sm:w-24" />
+          <Sticker name="08-doodle-icons/sparkle" tilt={10} className="absolute bottom-6 right-4 w-16 sm:bottom-10 sm:right-16 sm:w-24" />
           <h2 className="mb-9 text-[clamp(2.25rem,6vw,4rem)] font-bold leading-[1.05]">
             Ready to give your <br className="hidden sm:block" />
             corner a glow-up?

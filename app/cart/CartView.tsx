@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { Magnet } from "@/components/Magnet";
+import { Sticker } from "@/components/Sticker";
 import type { Product } from "@/lib/catalog";
 import { DAILY_LIMIT, PRICES } from "@/lib/rules";
 import { useCart } from "@/lib/use-cart";
 
-export type CartProduct = Pick<Product, "slug" | "name" | "artBg" | "artText" | "artTilt">;
+export type CartProduct = Pick<Product, "slug" | "name" | "artBg" | "artText" | "artTilt" | "imageUrl">;
 
 /** Cart contents. Reads the browser cart and matches it against the catalog passed from the server. */
 export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
@@ -25,7 +26,8 @@ export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="py-20 text-center">
+      <div className="flex flex-col items-center py-16 text-center">
+        <Sticker name="06-gen-z-and-funny/snacks-first" tilt={-3} className="mb-6 w-48" />
         <p className="text-xl font-semibold">Your cart is empty.</p>
         <p className="mt-2 text-muted">Pick a few magnets and they&apos;ll show up here.</p>
         <Link href="/shop" className="btn press mt-8">
@@ -51,6 +53,7 @@ export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
                     tilt="0deg"
                     bg={product.artBg}
                     text={product.artText}
+                    imageUrl={product.imageUrl}
                     label={`${product.name} magnet design`}
                   />
                 ) : (
