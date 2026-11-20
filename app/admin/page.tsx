@@ -21,6 +21,7 @@ type Order = {
   note: string | null;
   status: Status;
   created_at: string;
+  order_items: { product_name: string; qty: number }[];
 };
 
 type Props = { searchParams: Promise<{ status?: string; q?: string; msg?: string }> };
@@ -36,7 +37,7 @@ export default async function AdminPage({ searchParams }: Props) {
   const { status, q, msg } = await searchParams;
   const db = supabaseAdmin();
 
-  let list = db.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+  let list = db.from("orders").select("*, order_items(product_name, qty)").order("created_at", { ascending: false }).limit(200);
   if (STATUSES.includes(status as Status)) list = list.eq("status", status as Status);
   // Strip characters that have meaning inside a PostgREST or() filter.
   const term = (q ?? "").replace(/[%,()*.\\]/g, "").trim().slice(0, 40);
@@ -132,6 +133,15 @@ export default async function AdminPage({ searchParams }: Props) {
                   <p className="mt-1 text-sm">
                     {o.code} · {o.qty} × {o.variant} · <strong>₹{o.total}</strong> COD
                   </p>
+                  {o.order_items.length > 0 && (
+                    <ul className="mt-1 list-disc pl-5 text-sm">
+                      {o.order_items.map((item) => (
+                        <li key={item.product_name}>
+                          {item.qty} × {item.product_name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {o.note && <p className="mt-1 text-sm text-muted">“{o.note}”</p>}
                   <p className="mt-1 text-xs text-muted">
                     {new Date(o.created_at).toLocaleString("en-IN", {

@@ -2,12 +2,13 @@ import { after, NextResponse, type NextRequest } from "next/server";
 import { sendOrderMails } from "@/lib/mail";
 import { rateLimit } from "@/lib/rate-limit";
 import { DAILY_LIMIT, MAX_IMAGE_BYTES, detectImageType, orderSchema } from "@/lib/rules";
+import { getStudent } from "@/lib/session";
 import { supabaseAdmin } from "@/lib/supabase";
 
 const TEN_MINUTES = 10 * 60_000;
 const ONE_HOUR = 60 * 60_000;
 const MIME = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
-const FIELDS = ["name", "mobile", "bsp", "email", "variant", "qty", "note"] as const;
+const FIELDS = ["name", "mobile", "email", "variant", "qty", "note"] as const;
 
 const fail = (status: number, error: string, field?: string) =>
   NextResponse.json({ error, field }, { status });
@@ -21,6 +22,8 @@ export async function POST(req: NextRequest) {
   if (!rateLimit(`ip:${ip}`, 10, TEN_MINUTES)) {
     return fail(429, "Too many attempts. Please wait a few minutes and try again.");
   }
+  const student = await getStudent();
+  if (!student) return fail(401, "Please log in to place an order.");
   if (Number(req.headers.get("content-length") ?? 0) > MAX_IMAGE_BYTES + 100_000) {
     return fail(413, "Image is too large. Maximum size is 10 MB.");
   }
@@ -32,9 +35,11 @@ export async function POST(req: NextRequest) {
     return fail(400, "Invalid form submission.");
   }
 
-  const raw = Object.fromEntries(
-    FIELDS.map((k) => [k, typeof form.get(k) === "string" ? form.get(k) : undefined]),
-  );
+  // The BSP comes from the signed login session, never from the form.
+  const raw = {
+    ...Object.fromEntries(FIELDS.map((k) => [k, typeof form.get(k) === "string" ? form.get(k) : undefined])),
+    bsp: student.bsp,
+  };
   const parsed = orderSchema.safeParse(raw);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];

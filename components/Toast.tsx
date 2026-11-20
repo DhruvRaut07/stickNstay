@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CheckBadge } from "./CheckBadge";
 
 const SHOW_MS = 4500;
 
@@ -28,9 +29,7 @@ export function Toast({ title, detail }: { title: string; detail?: string }) {
         phase === "shown" ? "translate-y-0 opacity-100" : "-translate-y-[150%] opacity-0"
       }`}
     >
-      <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-lg font-bold text-accent-fg">
-        ✓
-      </span>
+      <CheckBadge className="h-9 w-9 !border-2 !shadow-none" />
       <span className="min-w-0">
         <strong className="block leading-tight">{title}</strong>
         {detail && <span className="block truncate text-sm opacity-80">{detail}</span>}

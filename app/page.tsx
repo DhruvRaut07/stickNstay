@@ -42,11 +42,11 @@ export default function Home() {
                 ready-made design or print your own picture. Pay cash when it&apos;s in your hands.
               </p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/order" className="btn-ink press">
-                  Order now
+                <Link href="/shop" className="btn-ink press">
+                  Shop now
                 </Link>
-                <Link href="/designs" className="btn-ghost press">
-                  Browse designs ›
+                <Link href="/order?variant=custom" className="btn-ghost press">
+                  Make a custom one ›
                 </Link>
               </div>
             </Reveal>
@@ -143,8 +143,11 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link href={`/order?variant=${variant}`} className="btn press mt-8">
-                    Order {title}
+                  <Link
+                    href={variant === "basic" ? "/shop" : "/order?variant=custom"}
+                    className="btn press mt-8"
+                  >
+                    {variant === "basic" ? "Shop ready-made" : "Order Custom"}
                   </Link>
                 </article>
               </Reveal>
@@ -185,8 +188,8 @@ export default function Home() {
           <div className="mx-auto max-w-5xl px-5 py-16 text-center">
             <h2 className="headline">Ready to give your corner a glow-up?</h2>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/order" className="btn-ink press">
-                Order now
+              <Link href="/shop" className="btn-ink press">
+                Shop now
               </Link>
               <Link href="/about" className="btn-ghost press">
                 Our story

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { logout } from "@/app/login/actions";
 import { OrderPlaced } from "@/components/OrderPlaced";
 import { DAILY_LIMIT, MAX_IMAGE_BYTES, PRICES, type Variant } from "@/lib/rules";
 import { DEMO_ORDERS } from "@/lib/site";
@@ -17,7 +18,13 @@ function makeDemoCode(): string {
 const input =
   "w-full rounded-2xl border border-line bg-surface px-4 py-3.5 text-base placeholder:text-muted transition focus:border-fg";
 
-export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
+export function OrderForm({
+  initialVariant,
+  student,
+}: {
+  initialVariant: Variant;
+  student: { name: string; bsp: string };
+}) {
   const router = useRouter();
   const [variant, setVariant] = useState<Variant>(initialVariant);
   const [qty, setQty] = useState(1);
@@ -49,6 +56,10 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/orders", { method: "POST", body: form });
+      if (res.status === 401) {
+        router.push("/login?next=/order");
+        return;
+      }
       if (DEMO_ORDERS && res.status >= 500) {
         showDemoSuccess();
         return;
@@ -73,7 +84,19 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
   if (demoCode) return <OrderPlaced code={demoCode} variant={variant} qty={qty} total={total} />;
 
   return (
-    <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate>
+    <>
+      {/* Its own form: a button inside the order form would submit the order instead. */}
+      <form
+        action={logout}
+        className="mt-8 flex items-center justify-between gap-3 rounded-2xl bg-accent/40 p-4 text-sm"
+      >
+        <p>
+          Signed in as <strong>{student.name}</strong> · {student.bsp}
+        </p>
+        <button className="min-h-11 font-semibold text-link hover:underline">Log out</button>
+      </form>
+
+    <form onSubmit={handleSubmit} className="mt-6 space-y-6" noValidate>
       <fieldset>
         <legend className="mb-3 text-sm font-medium">Magnet type</legend>
         <div className="grid grid-cols-2 gap-3">
@@ -100,7 +123,14 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
       </fieldset>
 
       <Field label="Full name" error={errorFor("name")}>
-        <input name="name" autoComplete="name" required maxLength={80} className={input} />
+        <input
+          name="name"
+          autoComplete="name"
+          required
+          maxLength={80}
+          defaultValue={student.name}
+          className={input}
+        />
       </Field>
       <Field label="Mobile number" error={errorFor("mobile")}>
         <input
@@ -112,13 +142,6 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
           required
           className={input}
         />
-      </Field>
-      <Field
-        label="BSP number"
-        error={errorFor("bsp")}
-        hint="Your college-issued ID. We use it to verify you're in our batch."
-      >
-        <input name="bsp" autoCapitalize="characters" autoComplete="off" required className={input} />
       </Field>
       <Field label="Email (optional)" error={errorFor("email")} hint="For an order confirmation.">
         <input name="email" type="email" autoComplete="email" className={input} />
@@ -179,6 +202,7 @@ export function OrderForm({ initialVariant }: { initialVariant: Variant }) {
         </button>
       </div>
     </form>
+    </>
   );
 }
 

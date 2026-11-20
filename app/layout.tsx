@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fredoka } from "next/font/google";
-import { Logo } from "@/components/Logo";
+import { Splash } from "@/components/Splash";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -33,12 +33,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fredoka.variable} h-full`}>
+    <html lang="en" suppressHydrationWarning className={`${fredoka.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        {/* Splash: CSS-only, plays on every full page load, then fades out and gets out of the way. */}
-        <div className="splash" aria-hidden="true">
-          <Logo className="splash-logo h-12 sm:h-16" />
-        </div>
+        {/* Hides the splash before first paint if it already played this session (no flash). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem("sns-splash-seen"))document.documentElement.setAttribute("data-sns-seen","")}catch(e){}`,
+          }}
+        />
+        <Splash />
         {children}
       </body>
     </html>

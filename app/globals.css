@@ -124,6 +124,75 @@ h3 {
   transition: transform 120ms ease-out, background-color 150ms ease;
 }
 
+/* Login page hero: a dotted board with floating magnets. Positions come from the design file. */
+.login-hero {
+  position: relative;
+  flex: 1 1 520px;
+  min-height: 480px;
+  overflow: hidden;
+  border-radius: 36px;
+  background-color: var(--sns-sunshine);
+  background-image: radial-gradient(var(--sns-sunshine-deep) 2.5px, transparent 2.5px);
+  background-size: 30px 30px;
+}
+.lh-glow {
+  position: absolute;
+  right: -120px;
+  top: -120px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: var(--sns-cream);
+  opacity: 0.4;
+}
+/* Shared by every MagnetSticker (login + About): placement comes from the per-page classes. */
+.sticker {
+  position: absolute;
+  transform-origin: 0 0;
+}
+.lh-m1 { left: 7%; top: 6%; width: 360px; height: 300px; transform: rotate(-8deg) scale(0.82); }
+.lh-m2 { left: 50%; top: 10%; width: 380px; height: 230px; transform: rotate(6deg) scale(0.78); }
+.lh-m3 { left: 6%; top: 37%; width: 340px; height: 340px; transform: rotate(-6deg) scale(0.74); }
+.lh-m4 { left: 54%; top: 36%; width: 340px; height: 290px; transform: rotate(7deg) scale(0.78); }
+.lh-m5 { left: 24%; top: 61%; width: 415px; height: 260px; transform: rotate(-4deg) scale(0.78); }
+.lh-tag {
+  position: absolute;
+  left: 40px;
+  bottom: 36px;
+  font-size: 30px;
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  .login-hero { min-height: 300px; flex-basis: auto; }
+  .lh-m1 { left: 4%; top: 8%; transform: rotate(-8deg) scale(0.5); }
+  .lh-m2 { left: 55%; top: 16%; transform: rotate(6deg) scale(0.42); }
+  .lh-m3, .lh-m4, .lh-m5 { display: none; }
+  .lh-tag { left: 28px; bottom: 24px; font-size: 24px; }
+}
+
+/* About hero: dotted yellow board, plus the sticker cluster arranged for a wide panel. */
+.dotted-board {
+  background-color: var(--sns-sunshine);
+  background-image: radial-gradient(var(--sns-sunshine-deep) 2.5px, transparent 2.5px);
+  background-size: 30px 30px;
+}
+.about-art {
+  position: relative;
+  flex: 1 1 520px;
+  min-height: 560px;
+}
+.ab-m1 { left: 4%; top: 4%; transform: rotate(-7deg) scale(0.95); }
+.ab-m2 { left: 46%; top: 0; transform: rotate(6deg) scale(0.9); }
+.ab-m3 { left: 56%; top: 34%; transform: rotate(-5deg) scale(0.78); }
+.ab-m4 { left: 8%; top: 46%; transform: rotate(6deg) scale(0.8); }
+.ab-m5 { left: 36%; top: 62%; transform: rotate(-4deg) scale(0.8); }
+@media (max-width: 640px) {
+  .about-art { flex-basis: 100%; min-height: 260px; }
+  .ab-m1 { left: 2%; top: 4%; transform: rotate(-7deg) scale(0.5); }
+  .ab-m2 { left: 48%; top: 14%; transform: rotate(6deg) scale(0.4); }
+  .ab-m3, .ab-m4, .ab-m5 { display: none; }
+}
+
 /* Playful tilt for badges/tags, kept small. */
 .tilt {
   display: inline-block;
@@ -135,34 +204,142 @@ h3 {
   outline-offset: 2px;
 }
 
-/* Splash screen: sunshine overlay with the logo popping in, gone after ~1.6s. */
-.splash {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  background: var(--sns-sunshine);
-  pointer-events: none;
-  animation: splash-out 400ms ease-in 1.2s forwards;
+/* Order confirmation: badge pops in, then the check draws itself. Static fallback = finished state. */
+.check-pop {
+  animation: check-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.splash-logo {
-  animation: splash-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+.check-draw {
+  stroke-dasharray: 24;
+  animation: check-draw 450ms ease-out 250ms both;
 }
-@keyframes splash-pop {
+@keyframes check-pop {
   from {
     opacity: 0;
-    transform: scale(0.7) rotate(-3deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: scale(0.5) rotate(-8deg);
   }
 }
-@keyframes splash-out {
-  to {
-    opacity: 0;
-    visibility: hidden;
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+
+/* Splash screen (logo kit): letters slide in, magnet drops and bounces, ring pulses, bar fills. */
+#sns-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--sns-sunshine);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 4vw, 36px);
+  overflow: hidden;
+  transition: opacity 0.55s ease, transform 0.55s ease, visibility 0s 0.55s;
+}
+#sns-splash.sns-done {
+  opacity: 0;
+  transform: scale(1.06);
+  visibility: hidden;
+  pointer-events: none;
+}
+html[data-sns-seen] #sns-splash {
+  display: none;
+}
+#sns-splash .sns-logo {
+  width: min(78vw, 600px);
+  height: auto;
+  overflow: visible;
+  display: block;
+}
+#sns-splash .sns-l,
+#sns-splash .sns-r {
+  fill: var(--sns-ink);
+  opacity: 0;
+}
+#sns-splash .sns-red {
+  fill: var(--sns-magnet-red);
+}
+#sns-splash .sns-cream {
+  fill: var(--sns-cream);
+}
+#sns-splash .sns-m {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  animation: sns-drop 1.5s cubic-bezier(0.4, 0, 0.6, 1) 0.1s both;
+}
+#sns-splash .sns-l {
+  animation: sns-inl 0.75s cubic-bezier(0.2, 1.45, 0.35, 1) 0.62s both;
+}
+#sns-splash .sns-r {
+  animation: sns-inr 0.75s cubic-bezier(0.2, 1.45, 0.35, 1) 0.62s both;
+}
+#sns-splash .sns-ring {
+  fill: none;
+  stroke: var(--sns-ink);
+  stroke-width: 26;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sns-ring 0.7s ease-out 1.1s both;
+}
+#sns-splash .sns-bar {
+  width: min(46vw, 220px);
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(27, 27, 47, 0.14);
+  overflow: hidden;
+}
+#sns-splash .sns-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: var(--sns-ink);
+  animation: sns-bar 1.9s cubic-bezier(0.3, 0.6, 0.3, 1) 0.3s forwards;
+}
+@keyframes sns-drop {
+  0% { transform: translateY(-2800px) rotate(-30deg); opacity: 0; }
+  8% { opacity: 1; }
+  42% { transform: translateY(0) rotate(0); opacity: 1; }
+  49% { transform: scale(1.12, 0.86); opacity: 1; }
+  60% { transform: scale(0.96, 1.06) rotate(7deg); opacity: 1; }
+  72% { transform: rotate(-4deg); opacity: 1; }
+  86% { transform: rotate(2deg); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes sns-inl {
+  from { transform: translateX(-1900px); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes sns-inr {
+  from { transform: translateX(1900px); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes sns-ring {
+  0% { transform: scale(0.3); opacity: 0; }
+  12% { opacity: 0.5; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes sns-bar {
+  to { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #sns-splash .sns-m,
+  #sns-splash .sns-l,
+  #sns-splash .sns-r {
+    animation: none;
+    opacity: 1;
+  }
+  #sns-splash .sns-ring {
+    display: none;
+  }
+  #sns-splash .sns-bar i {
+    animation-duration: 0.01s;
   }
 }
 
@@ -177,9 +354,6 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-  .splash {
-    display: none;
   }
   *,
   *::before,

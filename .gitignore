@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# student data (names) and login roster
+*.xlsx
+supabase/students_seed.sql
+
+# private data, large source media, tool caches
+data/
+assets/video/
+.ruff_cache/
