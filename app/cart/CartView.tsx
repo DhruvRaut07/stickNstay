@@ -54,6 +54,7 @@ export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
                     bg={product.artBg}
                     text={product.artText}
                     imageUrl={product.imageUrl}
+                    sizes="80px"
                     label={`${product.name} magnet design`}
                   />
                 ) : (

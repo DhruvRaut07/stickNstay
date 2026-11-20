@@ -55,6 +55,7 @@ export default async function ProductPage({ params }: Props) {
               bg={product.artBg}
               text={product.artText}
               imageUrl={product.imageUrl}
+              sizes="(min-width: 384px) 384px, 100vw"
               label={`${product.name} magnet design`}
             />
           </div>

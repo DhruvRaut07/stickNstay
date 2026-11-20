@@ -1,16 +1,34 @@
-type MagnetProps = { tilt: string; bg: string; text: string; label: string; title?: string; imageUrl?: string | null };
+import Image from "next/image";
+
+type MagnetProps = {
+  tilt: string;
+  bg: string;
+  text: string;
+  label: string;
+  title?: string;
+  imageUrl?: string | null;
+  /** Rendered width hint so next/image serves a small file (default: shop grid). */
+  sizes?: string;
+};
 
 /** Product art: the sticker image when there is one, else coloured placeholder art. */
-export function Magnet({ tilt, bg, text, label, title, imageUrl }: MagnetProps) {
+export function Magnet({
+  tilt,
+  bg,
+  text,
+  label,
+  title,
+  imageUrl,
+  sizes = "(min-width: 768px) 25vw, 50vw",
+}: MagnetProps) {
   if (imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={imageUrl}
         alt={label}
         width={800}
         height={800}
-        loading="lazy"
+        sizes={sizes}
         className="aspect-square h-auto w-full select-none object-contain"
         style={{ transform: `rotate(${tilt})` }}
       />

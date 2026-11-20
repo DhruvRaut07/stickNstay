@@ -27,9 +27,10 @@ const chip ="inline-flex min-h-11 items-center rounded-full border-2 px-5 font-s
 
 export default async function ShopPage({ searchParams }: Props) {
   const { category } = await searchParams;
-  const categories = await getCategories();
+  // One round trip: the catalog is small (56 rows), so filter by category in memory.
+  const [categories, all] = await Promise.all([getCategories(), getProducts()]);
   const active = categories.find((c) => c.slug === category);
-  const products = await getProducts(active?.slug);
+  const products = active ? all.filter((p) => p.categorySlug === active.slug) : all;
 
   return (
     <>
