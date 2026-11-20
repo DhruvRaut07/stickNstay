@@ -8,7 +8,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getCategories, getProducts, type Product } from "@/lib/catalog";
 import { paginate, parsePage } from "@/lib/pagination";
-import { DAILY_LIMIT, PRICES } from "@/lib/rules";
+import { DAILY_LIMIT } from "@/lib/rules";
+import { getPrices } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Shop: StickNstay",
@@ -34,7 +35,7 @@ const chip ="inline-flex min-h-11 items-center rounded-full border-2 px-5 font-s
 export default async function ShopPage({ searchParams }: Props) {
   const { category, page: rawPage } = await searchParams;
   // One round trip: the catalog is small (56 rows), so filter by category in memory.
-  const [categories, all] = await Promise.all([getCategories(), getProducts()]);
+  const [categories, all, prices] = await Promise.all([getCategories(), getProducts(), getPrices()]);
   const active = categories.find((c) => c.slug === category);
   const products = active ? all.filter((p) => p.categorySlug === active.slug) : all;
   const cells: Cell[] = active ? products : ["custom", ...products];
@@ -49,7 +50,7 @@ export default async function ShopPage({ searchParams }: Props) {
           title="Pick your magnet."
           stickers={["01-motivation/start-before-ready", "06-gen-z-and-funny/no-thoughts-just-vibes"]}
         >
-          Ready-made 5×7 inch magnets at ₹{PRICES.basic} each. Up to {DAILY_LIMIT} per student per day.
+          Ready-made 5×7 inch magnets at ₹{prices.basic} each. Up to {DAILY_LIMIT} per student per day.
         </PageHero>
 
         <section className="mx-auto max-w-5xl px-5 py-16">
@@ -106,7 +107,11 @@ export default async function ShopPage({ searchParams }: Props) {
             <>
               <ul id="designs" className="mt-12 grid scroll-mt-24 grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-4">
                 {paged.items.map((cell) =>
-                  cell === "custom" ? <CustomMagnetCard key="custom" /> : <ProductCard key={cell.slug} product={cell} />,
+                  cell === "custom" ? (
+                    <CustomMagnetCard key="custom" price={prices.custom} />
+                  ) : (
+                    <ProductCard key={cell.slug} product={cell} price={prices.basic} />
+                  ),
                 )}
               </ul>
               <div className="mt-14">

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { logout } from "@/app/login/actions";
 import { OrderPlaced } from "@/components/OrderPlaced";
-import { DAILY_LIMIT, MAX_IMAGE_BYTES, PRICES, type Variant } from "@/lib/rules";
+import { DAILY_LIMIT, MAX_IMAGE_BYTES, type Prices, type Variant } from "@/lib/rules";
 import { DEMO_ORDERS } from "@/lib/site";
 
 type FieldError = { message: string; field?: string };
@@ -21,9 +21,11 @@ const input =
 export function OrderForm({
   initialVariant,
   student,
+  prices,
 }: {
   initialVariant: Variant;
   student: { name: string; bsp: string };
+  prices: Prices;
 }) {
   const router = useRouter();
   const [variant, setVariant] = useState<Variant>(initialVariant);
@@ -33,7 +35,7 @@ export function OrderForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [demoCode, setDemoCode] = useState<string | null>(null);
 
-  const total = PRICES[variant] * qty;
+  const total = prices[variant] * qty;
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
 
   function showDemoSuccess() {
@@ -116,7 +118,7 @@ export function OrderForm({
                 className="sr-only"
               />
               <span className="block font-semibold capitalize">{v}</span>
-              <span className="text-sm text-muted">₹{PRICES[v]} each</span>
+              <span className="text-sm text-muted">₹{prices[v]} each</span>
             </label>
           ))}
         </div>

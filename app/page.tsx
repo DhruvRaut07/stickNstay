@@ -4,7 +4,8 @@ import { Reveal } from "@/components/Reveal";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Sticker } from "@/components/Sticker";
-import { DAILY_LIMIT, PRICES } from "@/lib/rules";
+import { DAILY_LIMIT } from "@/lib/rules";
+import { getPrices } from "@/lib/settings";
 
 const STEPS = [
   ["Verify", "Enter your name, mobile and BSP number. Only IBS Mumbai batchmates can order."],
@@ -105,7 +106,8 @@ function Spark() {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const prices = await getPrices();
   return (
     <>
       <SiteHeader />
@@ -314,7 +316,7 @@ export default function Home() {
                     <h3 className="mb-1.5 text-4xl">{title}</h3>
                     <p className={`mb-6 text-[19px] ${custom ? "" : "text-muted"}`}>{blurb}</p>
                     <p className="mb-6 text-[76px] font-bold leading-none">
-                      ₹{PRICES[variant]}
+                      ₹{prices[variant]}
                       <span className={`ml-1 text-[22px] font-medium ${custom ? "" : "text-muted"}`}>each</span>
                     </p>
                     <ul className="mb-8 flex-1 space-y-3.5">

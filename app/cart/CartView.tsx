@@ -4,16 +4,16 @@ import Link from "next/link";
 import { Magnet } from "@/components/Magnet";
 import { Sticker } from "@/components/Sticker";
 import type { Product } from "@/lib/catalog";
-import { DAILY_LIMIT, PRICES } from "@/lib/rules";
+import { DAILY_LIMIT } from "@/lib/rules";
 import { useCart } from "@/lib/use-cart";
 
 export type CartProduct = Pick<Product, "slug" | "name" | "artBg" | "artText" | "artTilt" | "imageUrl">;
 
 /** Cart contents. Reads the browser cart and matches it against the catalog passed from the server. */
-export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
+export function CartView({ catalog, price }: { catalog: readonly CartProduct[]; price: number }) {
   const { ready, items, count, setQuantity, remove } = useCart();
   const bySlug = new Map(catalog.map((p) => [p.slug, p]));
-  const total = items.reduce((sum, item) => sum + (bySlug.has(item.slug) ? item.qty * PRICES.basic : 0), 0);
+  const total = items.reduce((sum, item) => sum + (bySlug.has(item.slug) ? item.qty * price : 0), 0);
   const hasUnavailable = items.some((item) => !bySlug.has(item.slug));
 
   if (!ready) {
@@ -63,7 +63,7 @@ export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{product ? product.name : "No longer available"}</p>
-                {product && <p className="text-sm text-muted">₹{PRICES.basic} each</p>}
+                {product && <p className="text-sm text-muted">₹{price} each</p>}
                 <button
                   type="button"
                   onClick={() => remove(item.slug)}
@@ -89,7 +89,7 @@ export function CartView({ catalog }: { catalog: readonly CartProduct[] }) {
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 font-semibold">₹{item.qty * PRICES.basic}</p>
+                  <p className="mt-2 font-semibold">₹{item.qty * price}</p>
                 </div>
               )}
             </li>

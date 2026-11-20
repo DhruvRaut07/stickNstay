@@ -8,7 +8,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getProduct, getProducts } from "@/lib/catalog";
-import { DAILY_LIMIT, PRICES } from "@/lib/rules";
+import { DAILY_LIMIT } from "@/lib/rules";
+import { getPrices } from "@/lib/settings";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,7 +33,8 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const related = (await getProducts(product.categorySlug)).filter((p) => p.slug !== product.slug);
+  const [categoryProducts, prices] = await Promise.all([getProducts(product.categorySlug), getPrices()]);
+  const related = categoryProducts.filter((p) => p.slug !== product.slug);
 
   return (
     <>
@@ -63,7 +65,7 @@ export default async function ProductPage({ params }: Props) {
           <div>
             <p className="text-sm font-semibold text-muted">{product.categoryName}</p>
             <h1 className="headline mt-1">{product.name}</h1>
-            <p className="mt-4 text-3xl font-bold tracking-tight">₹{PRICES.basic}</p>
+            <p className="mt-4 text-3xl font-bold tracking-tight">₹{prices.basic}</p>
             <p className="mt-4 text-lg">{product.description}</p>
 
             <div className="mt-8">
@@ -92,7 +94,7 @@ export default async function ProductPage({ params }: Props) {
             </h2>
             <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-14 md:grid-cols-4">
               {related.slice(0, 4).map((p) => (
-                <ProductCard key={p.slug} product={p} />
+                <ProductCard key={p.slug} product={p} price={prices.basic} />
               ))}
             </ul>
           </section>

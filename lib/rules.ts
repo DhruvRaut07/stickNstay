@@ -1,7 +1,23 @@
 import { z } from "zod";
 
-// Display-only. The database `settings` table is the source of truth for charging.
-export const PRICES = { basic: 30, custom: 40 } as const;
+export type Prices = { basic: number; custom: number };
+
+// Fallback only. The database `settings` table is the source of truth (see lib/settings.ts).
+export const DEFAULT_PRICES: Prices = { basic: 30, custom: 40 };
+
+const MAX_PRICE = 9999;
+const validPrice = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 1 && (n as number) <= MAX_PRICE;
+
+/** Prices from `settings` rows. A missing or invalid row keeps its default instead of showing a wrong price. */
+export function parsePrices(rows: readonly { key: string; value: unknown }[] | null | undefined): Prices {
+  const find = (key: string) => rows?.find((r) => r.key === key)?.value;
+  const basic = find("price_basic");
+  const custom = find("price_custom");
+  return {
+    basic: validPrice(basic) ? basic : DEFAULT_PRICES.basic,
+    custom: validPrice(custom) ? custom : DEFAULT_PRICES.custom,
+  };
+}
 export const DAILY_LIMIT = 5;
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 export const VARIANTS = ["basic", "custom"] as const;

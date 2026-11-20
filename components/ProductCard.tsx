@@ -1,16 +1,15 @@
 import Link from "next/link";
 import type { Product } from "@/lib/catalog";
-import { PRICES } from "@/lib/rules";
 import { AddToCartButton } from "./AddToCartButton";
 import { Magnet } from "./Magnet";
 
 /** Shop grid tile: art, name, category, price and an add-to-cart button. */
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, price }: { product: Product; price: number }) {
   return (
     <li className="flex flex-col">
       <Link
         href={`/shop/${product.slug}`}
-        aria-label={`${product.name}, ₹${PRICES.basic}`}
+        aria-label={`${product.name}, ₹${price}`}
         tabIndex={-1}
         className="press block"
       >
@@ -30,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
           </Link>
         </h3>
         <p className="mt-1 text-[15px] text-muted">
-          <span className="font-semibold text-fg">₹{PRICES.basic}</span> · 5×7 inch
+          <span className="font-semibold text-fg">₹{price}</span> · 5×7 inch
         </p>
       </div>
       <div className="mt-3">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { logout } from "@/app/login/actions";
-import { DAILY_LIMIT, PRICES } from "@/lib/rules";
+import { DAILY_LIMIT } from "@/lib/rules";
 import { useCart } from "@/lib/use-cart";
 
 type FieldError = { message: string; field?: string };
@@ -15,9 +15,11 @@ const input =
 export function CheckoutForm({
   student,
   catalog,
+  price,
 }: {
   student: { name: string; bsp: string };
   catalog: readonly { slug: string; name: string }[];
+  price: number;
 }) {
   const router = useRouter();
   const { ready, items, count, clear } = useCart();
@@ -26,7 +28,7 @@ export function CheckoutForm({
   const [isPlaced, setIsPlaced] = useState(false);
 
   const names = new Map(catalog.map((p) => [p.slug, p.name]));
-  const total = count * PRICES.basic;
+  const total = count * price;
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -114,7 +116,7 @@ export function CheckoutForm({
               <span>
                 {names.get(item.slug) ?? item.slug} <span className="text-muted">× {item.qty}</span>
               </span>
-              <span className="font-semibold">₹{item.qty * PRICES.basic}</span>
+              <span className="font-semibold">₹{item.qty * price}</span>
             </li>
           ))}
         </ul>
