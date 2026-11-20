@@ -60,7 +60,16 @@ async function requestCode(formData: FormData, next: string): Promise<LoginState
     console.error("Roster lookup failed", error);
     return fail("Something went wrong. Please try again.");
   }
-  const { data: owner } = await db.from("bsp_allowlist").select("bsp").eq("email", email).neq("bsp", bsp).limit(1);
+  const { data: owner, error: ownerError } = await db
+    .from("bsp_allowlist")
+    .select("bsp")
+    .eq("email", email)
+    .neq("bsp", bsp)
+    .limit(1);
+  if (ownerError) {
+    console.error("Mailbox owner lookup failed", ownerError);
+    return fail("Something went wrong. Please try again.");
+  }
 
   const eligible =
     student?.active &&
@@ -82,7 +91,8 @@ async function requestCode(formData: FormData, next: string): Promise<LoginState
     return fail("Something went wrong. Please try again.");
   }
   if (!(await sendLoginCode(email, code))) {
-    await db.from("login_codes").delete().eq("bsp", bsp);
+    const { error: cleanupError } = await db.from("login_codes").delete().eq("bsp", bsp);
+    if (cleanupError) console.error("Removing unsent login code failed", cleanupError);
     return fail("We couldn't send the email. Please try again in a minute.");
   }
   return { step: "verify", bsp, email, next };
@@ -104,13 +114,26 @@ async function verifyCode(formData: FormData, next: string): Promise<LoginState>
   }
 
   const db = supabaseAdmin();
-  const { data: row } = await db.from("login_codes").select("email, code_hash, expires_at").eq("bsp", bsp).maybeSingle();
+  const { data: row, error: lookupError } = await db
+    .from("login_codes")
+    .select("email, code_hash, expires_at")
+    .eq("bsp", bsp)
+    .maybeSingle();
+  if (lookupError) {
+    console.error("Login code lookup failed", lookupError);
+    return again("Something went wrong. Please try again.");
+  }
   if (!row || new Date(row.expires_at).getTime() < Date.now()) {
     return { step: "request", next, error: "That code has expired. Please request a new one." };
   }
   if (!codeMatches(bsp, code, row.code_hash)) return again("That code isn't right. Check the email and try again.");
 
-  await db.from("login_codes").delete().eq("bsp", bsp);
+  // Fail closed: a code that could not be deleted must not stay usable.
+  const { error: deleteError } = await db.from("login_codes").delete().eq("bsp", bsp);
+  if (deleteError) {
+    console.error("Deleting used login code failed", deleteError);
+    return again("Something went wrong. Please try again.");
+  }
   // Bind this mailbox to the BSP on first login (the unique index blocks one mailbox owning two BSPs).
   const { error: bindError } = await db
     .from("bsp_allowlist")

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { adminRedirect } from "@/lib/admin-schemas";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizeBsp } from "@/lib/rules";
 import { getAdmin, requireAdmin, supabaseAdmin, supabaseAuth } from "@/lib/supabase";
@@ -43,17 +44,21 @@ export async function setStatus(formData: FormData) {
   const parsed = z
     .object({ id: z.uuid(), status: z.enum(STATUSES) })
     .safeParse({ id: formData.get("id"), status: formData.get("status") });
-  if (!parsed.success) return back("Invalid status update.");
+  const to = (message: string) => redirect(adminRedirect(formData.get("back"), message));
+  if (!parsed.success) return to("Invalid status update.");
 
-  const { error } = await supabaseAdmin()
+  const { data, error } = await supabaseAdmin()
     .from("orders")
     .update({ status: parsed.data.status })
-    .eq("id", parsed.data.id);
+    .eq("id", parsed.data.id)
+    .select("code");
   if (error) {
     console.error("setStatus failed", error);
-    return back("Couldn't update that order.");
+    return to("Couldn't update that order.");
   }
+  if (!data?.length) return to("That order no longer exists.");
   revalidatePath("/admin");
+  return to(`${data[0].code} is now ${parsed.data.status}.`);
 }
 
 export async function importBsps(formData: FormData) {

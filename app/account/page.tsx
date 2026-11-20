@@ -19,10 +19,13 @@ export default async function AccountPage() {
   const db = supabaseAdmin();
   const since = isoHoursAgo(48);
 
-  const [{ data: profile }, { data: recent }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: recent, error: recentError }] = await Promise.all([
     db.from("bsp_allowlist").select("division, email").eq("bsp", student.bsp).maybeSingle(),
     db.from("orders").select("qty, status, created_at").eq("bsp", student.bsp).gte("created_at", since),
   ]);
+  // Showing "0 used today" after a failed read would be a lie, so surface the error page instead.
+  const loadError = profileError ?? recentError;
+  if (loadError) throw new Error(`Could not load account: ${loadError.message}`);
 
   const today = istDay(new Date());
   const used = (recent ?? [])

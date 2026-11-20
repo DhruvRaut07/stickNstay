@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { AdminNav } from "@/components/AdminNav";
+import { orIlike, searchTerm } from "@/lib/admin-schemas";
 import { requireAdmin, supabaseAdmin } from "@/lib/supabase";
-import { importBsps, logout, removeBsp, setStatus } from "./actions";
+import { importBsps, removeBsp, setStatus } from "./actions";
 
 export const metadata: Metadata = { title: "Admin: StickNstay", robots: { index: false } };
 
@@ -39,17 +41,25 @@ export default async function AdminPage({ searchParams }: Props) {
 
   let list = db.from("orders").select("*, order_items(product_name, qty)").order("created_at", { ascending: false }).limit(200);
   if (STATUSES.includes(status as Status)) list = list.eq("status", status as Status);
-  // Strip characters that have meaning inside a PostgREST or() filter.
-  const term = (q ?? "").replace(/[%,()*.\\]/g, "").trim().slice(0, 40);
-  if (term) list = list.or(`name.ilike.%${term}%,bsp.ilike.%${term}%,code.ilike.%${term}%`);
+  const term = searchTerm(q);
+  if (term) list = list.or(orIlike(["name", "bsp", "code"], term));
 
-  const [{ data: orders, error }, { data: all }, { count: bspCount }] = await Promise.all([
-    list.returns<Order[]>(),
-    db.from("orders").select("status, variant, qty, total, created_at").limit(5000),
-    db.from("bsp_allowlist").select("*", { count: "exact", head: true }),
-  ]);
+  const [{ data: orders, error }, { data: all, error: statsError }, { count: bspCount, error: bspError }] =
+    await Promise.all([
+      list.returns<Order[]>(),
+      db.from("orders").select("status, variant, qty, total, created_at").limit(5000),
+      db.from("bsp_allowlist").select("*", { count: "exact", head: true }),
+    ]);
+  if (error) console.error("Admin orders load failed", error);
+  if (statsError) console.error("Admin stats load failed", statsError);
+  if (bspError) console.error("Admin BSP count failed", bspError);
 
   const rows = orders ?? [];
+  // Where to return after an action, so filters survive and a confirmation can show.
+  const back = `/admin?${new URLSearchParams({
+    ...(STATUSES.includes(status as Status) && { status: status as string }),
+    ...(term && { q: term }),
+  })}`;
   const today = istDay(new Date());
   const stats = (all ?? []).reduce(
     (s, o) => ({
@@ -62,21 +72,28 @@ export default async function AdminPage({ searchParams }: Props) {
   );
 
   const paths = rows.flatMap((o) => (o.image_path ? [o.image_path] : []));
-  const signed = paths.length
-    ? (await db.storage.from("uploads").createSignedUrls(paths, SIGNED_URL_SECONDS)).data ?? []
-    : [];
-  const imageUrl = new Map(signed.map((s) => [s.path, s.signedUrl]));
+  const signedRes = paths.length ? await db.storage.from("uploads").createSignedUrls(paths, SIGNED_URL_SECONDS) : null;
+  if (signedRes?.error) console.error("Admin signed URLs failed", signedRes.error);
+  const imageUrl = new Map((signedRes?.data ?? []).map((s) => [s.path, s.signedUrl]));
+  // Supabase caps a response at 1000 rows regardless of .limit(), which would make the stats silently low.
+  const statsTruncated = (all?.length ?? 0) >= 1000;
+  const partial = [
+    statsError && "stats",
+    bspError && "BSP count",
+    signedRes?.error && "customer images",
+    statsTruncated && "all orders (only the latest 1000 are counted)",
+  ].filter(Boolean);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-10">
-      <div className="flex items-center justify-between">
-        <h1 className="headline">Orders</h1>
-        <form action={logout}>
-          <button className="btn-ghost press text-sm">
-            Sign out
-          </button>
-        </form>
-      </div>
+      <AdminNav />
+      <h1 className="headline mt-8">Orders</h1>
+
+      {partial.length > 0 && (
+        <p role="alert" className="mt-4 font-medium text-link">
+          Couldn&apos;t load {partial.join(", ")}. Numbers below may be incomplete. Check the Vercel logs.
+        </p>
+      )}
 
       {msg && (
         <p role="status" className="mt-4 rounded-2xl bg-accent p-4 text-sm font-medium">
@@ -154,6 +171,7 @@ export default async function AdminPage({ searchParams }: Props) {
                 <div className="flex flex-col items-end gap-2">
                   <form action={setStatus} className="flex gap-2">
                     <input type="hidden" name="id" value={o.id} />
+                    <input type="hidden" name="back" value={back} />
                     <select name="status" defaultValue={o.status} className={field} aria-label={`Status for ${o.code}`}>
                       {STATUSES.map((s) => (
                         <option key={s} value={s}>

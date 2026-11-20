@@ -12,11 +12,13 @@ export default async function ThankYouPage({ params }: { params: Promise<{ code:
   if (!CODE_PATTERN.test(code)) notFound();
 
   // Only non-personal fields are read: the unguessable code is the only "key" here.
-  const { data: order } = await supabaseAdmin()
+  const { data: order, error } = await supabaseAdmin()
     .from("orders")
     .select("code, variant, qty, total")
     .eq("code", code)
     .maybeSingle();
+  // A read failure is not "order not found": show the error page, not a misleading 404.
+  if (error) throw new Error(`Could not load order: ${error.message}`);
   if (!order) notFound();
 
   return (
